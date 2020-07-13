@@ -5,7 +5,7 @@ import java.util.Objects;
 public class StringPool {
     private StringPool(){}
 
-    private static Node root = new Node();
+    private static Node root;
 
     public static String getCachedString(byte[] source, int start){
         Node node = root;
@@ -47,8 +47,8 @@ public class StringPool {
         }
     }
 
-    public static void free(){
-        root = null;
+    public static void init(){
+        root = new Node();
     }
 
     private static synchronized String buildDict(String source, int start, Node node, int sourceIdx){

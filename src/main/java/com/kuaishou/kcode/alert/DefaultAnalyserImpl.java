@@ -2,43 +2,41 @@ package com.kuaishou.kcode.alert;
 
 import com.kuaishou.kcode.alert.domain.RuleTypeEnum;
 import com.kuaishou.kcode.alert.domain.RangeEnum;
-import com.kuaishou.kcode.common.ServicePair;
+import com.kuaishou.kcode.common.ServicePairWithIP;
 import com.kuaishou.kcode.common.StatisticalIndicators;
-import com.kuaishou.kcode.utils.IPAddressConverter;
-import com.kuaishou.kcode.utils.MathConverter;
-import com.kuaishou.kcode.utils.StringPool;
-import com.kuaishou.kcode.utils.TimeConverter;
+import com.kuaishou.kcode.utils.*;
 
 import java.util.*;
 
-public class DefaultAnalyser implements AlertAnalyser {
-    private int maxTimeLimit;
+public class DefaultAnalyserImpl implements AlertAnalyser {
     private int lastTime;
-    private Map<ServicePair, Counter> records = new HashMap<>();
+    private Map<ServicePairWithIP, Counter> records = new HashMap<>();
     private Collection<String> alertList;
     private Rule rules = null;
 
     @Override
-    public int init(Collection<String> alertRules) {
+    public void init(Collection<String> alertRules) {
         lastTime = -2;
-        maxTimeLimit = 0;
         alertRules.forEach(rule -> {
             rules = new Rule(rules, rule);
         });
         alertList = new LinkedList<>();
-        return maxTimeLimit;
     }
 
     // WARN: 要求请求到来严格有序,单线程处理
     @Override
-    public Collection<String> analyser(ServicePair servicePair, StatisticalIndicators indicators, int nowTime) {
+    public void analyser(int nowTime, ServicePairWithIP servicePairWithIP, StatisticalIndicators indicators) {
         if (lastTime + 1 != nowTime){
             records.clear();
         }
         if (Objects.nonNull(rules)){
-            rules.filter(servicePair, alertList, indicators, nowTime);
+            rules.filter(servicePairWithIP, alertList, indicators, nowTime);
         }
         lastTime = nowTime;
+    }
+
+    @Override
+    public Collection<String> getAlert() {
         return alertList;
     }
 
@@ -92,18 +90,16 @@ public class DefaultAnalyser implements AlertAnalyser {
                     valueLimit = (short) (valueLimit * 10 + rule.charAt(idx++) - '0');
                 }
             }
-
-            maxTimeLimit = Math.max(maxTimeLimit, timeLimit);
         }
 
-        public void filter(ServicePair servicePair, Collection<String> collection, StatisticalIndicators indicators, int time){
-            if ((fromService.equals("ALL") || fromService.equals(servicePair.getFromService())) &&
-                    (toService.equals("ALL")) || toService.equals(servicePair.getToService())){
+        public void filter(ServicePairWithIP servicePairWithIP, Collection<String> collection, StatisticalIndicators indicators, int time){
+            if ((fromService.equals("ALL") || fromService.equals(servicePairWithIP.getFromService())) &&
+                    (toService.equals("ALL")) || toService.equals(servicePairWithIP.getToService())){
                 if (match(indicators)){
-                    Counter counter = records.get(servicePair);
+                    Counter counter = records.get(servicePairWithIP);
                     if (Objects.isNull(counter)){
                         counter = new Counter((byte) 0, time - 1);
-                        records.put(servicePair, counter);
+                        records.put(ServicePairFactory.clone(servicePairWithIP), counter);
                     }
                     if (counter.lastTmp == time - 1){
                         counter.count = (byte) Math.min(timeLimit, counter.count + 1);
@@ -112,26 +108,26 @@ public class DefaultAnalyser implements AlertAnalyser {
                         counter.count = 1;
                     }
                     if (counter.count == timeLimit){
-                        alert(collection, servicePair, time, indicators);
+                        alert(collection, servicePairWithIP, time, indicators);
                     }
                     counter.lastTmp = time;
                 }
             }
             if (Objects.nonNull(nextRule)){
-                nextRule.filter(servicePair, collection, indicators, time);
+                nextRule.filter(servicePairWithIP, collection, indicators, time);
             }
         }
 
-        private void alert(Collection<String> collection, ServicePair servicePair, int time, StatisticalIndicators indicators){
+        private void alert(Collection<String> collection, ServicePairWithIP servicePairWithIP, int time, StatisticalIndicators indicators){
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(uniqueKey).append(',');
             TimeConverter.addInStringyBuilder(time, stringBuilder);
             stringBuilder.append(',');
-            stringBuilder.append(servicePair.getFromService()).append(',');
-            IPAddressConverter.addInStringBuilder(servicePair.getFromIP(), stringBuilder);
+            stringBuilder.append(servicePairWithIP.getFromService()).append(',');
+            IPAddressConverter.addInStringBuilder(servicePairWithIP.getFromIP(), stringBuilder);
             stringBuilder.append(',');
-            stringBuilder.append(servicePair.getToService()).append(',');
-            IPAddressConverter.addInStringBuilder(servicePair.getToIP(), stringBuilder);
+            stringBuilder.append(servicePairWithIP.getToService()).append(',');
+            IPAddressConverter.addInStringBuilder(servicePairWithIP.getToIP(), stringBuilder);
             stringBuilder.append(',');
             if (ruleType == RuleTypeEnum.P99){
                 stringBuilder.append(indicators.getP99()).append("ms");
