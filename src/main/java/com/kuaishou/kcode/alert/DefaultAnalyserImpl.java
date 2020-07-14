@@ -76,10 +76,16 @@ public class DefaultAnalyserImpl implements AlertAnalyser {
             while (rule.charAt(idx) >= '0' && rule.charAt(idx) <= '9'){
                 timeLimit = (byte) (timeLimit * 10 + rule.charAt(idx++) - '0');
             }
+            if (timeLimit <= 0){
+                throw new RuntimeException("超过byte范围");
+            }
             range = RangeEnum.valueOfSymbol(rule.charAt(idx++));
             idx++;
             if (ruleType == RuleTypeEnum.SUCCESS_RATE){
                 valueLimit = (short) (100.0 * Float.parseFloat(rule.substring(idx, rule.length()-1)));
+            }
+            if (valueLimit < 0){
+                throw new RuntimeException("超过short范围");
             }
             else if (ruleType == RuleTypeEnum.P99){
                 while (rule.charAt(idx) >= '0' && rule.charAt(idx) <= '9'){
@@ -100,8 +106,11 @@ public class DefaultAnalyserImpl implements AlertAnalyser {
                     if (counter.lastTmp == time - 1){
                         counter.count = (byte) Math.min(timeLimit, counter.count + 1);
                     }
-                    else{
+                    else if (counter.lastTmp < time - 1){
                         counter.count = (byte) Math.min(timeLimit, 1);
+                    }
+                    else {
+                        throw new RuntimeException("时间乱序");
                     }
                     if (counter.count == timeLimit){
                         alert(collection, servicePairWithIP, time, indicators);

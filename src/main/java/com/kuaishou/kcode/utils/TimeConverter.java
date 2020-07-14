@@ -1,6 +1,5 @@
 package com.kuaishou.kcode.utils;
 
-import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 
 public class TimeConverter {
@@ -10,8 +9,6 @@ public class TimeConverter {
     private static final int zeroPoint = calculateDays(1970, 1, 1);
     private static final int offset  = ZonedDateTime.now().getOffset().getTotalSeconds() / 60;
 
-    private static SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd HH:mm");
-
     public static int convertStringToInt(String date){
         int[] dat = parseDate(date);
         int days = calculateDays(dat[0], dat[1], dat[2]) - zeroPoint;
@@ -19,11 +16,6 @@ public class TimeConverter {
     }
 
     public static void addInStringyBuilder(int minutes, StringBuilder sb){
-        String timeText = format.format(minutes * 60000L);
-        sb.append(timeText);
-
-
-        /*
         minutes += offset;
         int minute = minutes % 60;
         minutes /= 60;
@@ -35,7 +27,6 @@ public class TimeConverter {
                 append(y[2] / 10).append(y[2] % 10).append(' ').
                 append(hour / 10).append(hour % 10).append(':').
                 append(minute / 10).append(minute % 10);
-                */
     }
 
     private static int[] calculateYears(int days){
