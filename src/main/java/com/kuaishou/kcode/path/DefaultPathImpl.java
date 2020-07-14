@@ -37,10 +37,7 @@ public class DefaultPathImpl implements Path {
 
     @Override
     public Collection<String> getPath(ServicePairWithoutIP servicePair, int time, RuleTypeEnum ruleType) {
-        Map<ServicePairWithoutIP, StatisticalIndicators> indicators = points.get(time);
-        if (Objects.isNull(indicators)){
-            return Collections.emptyList();
-        }
+        Map<ServicePairWithoutIP, StatisticalIndicators> indicators = points.getOrDefault(time, Collections.emptyMap());
         Collection<String> collection = new ArrayList<>();
         Collection<List<String>> path = pathCache.get(servicePair);
         if (Objects.isNull(path)){

@@ -94,9 +94,6 @@ public class ServiceRecorder extends Configuration {
                 System.arraycopy(delays, 0, target, 0, delays.length);
                 delays = target;
             }
-            if (record.getDelay() < 0){
-                throw new RuntimeException("delay超过short");
-            }
             delays[totalTimes++] = record.getDelay();
             if (record.isState()){
                 successTimes++;
