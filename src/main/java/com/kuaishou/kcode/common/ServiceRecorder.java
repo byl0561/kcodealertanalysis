@@ -26,10 +26,8 @@ public class ServiceRecorder extends Configuration {
         allRecords.init(-1, -1);
     }
 
-    public void caculate(){
-        ip2Records.values().forEach(records -> {
-            records.calculate();
-        });
+    public void calculate(){
+        ip2Records.values().forEach(Records::calculate);
         allRecords.calculate();
     }
 
@@ -104,16 +102,8 @@ public class ServiceRecorder extends Configuration {
         }
 
         void calculate(){
-            successRate = (short) (successTimes * 10000 / totalTimes);
+            successRate = (short) ((long) successTimes * 10000 / totalTimes);
             p99 = MathUtil.get99th(delays, totalTimes);
-        }
-
-        public int getSuccessTimes() {
-            return successTimes;
-        }
-
-        public int getTotalTimes() {
-            return totalTimes;
         }
     }
 }

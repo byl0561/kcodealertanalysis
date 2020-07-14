@@ -6,7 +6,7 @@ import com.kuaishou.kcode.common.ServiceRecorder;
 public class ServiceRecorderPool {
     private ServiceRecorderPool(){};
 
-    private static Pool<ServiceRecorder> serviceRecorderHolder;
+    private static Pool<ServiceRecorder> serviceRecorderHolder = new Pool<>();
 
     public synchronized static ServiceRecorder get(){
         if (serviceRecorderHolder.isEmpty()){
@@ -21,9 +21,5 @@ public class ServiceRecorderPool {
 
     public synchronized static void put(ServiceRecorder serviceRecorder){
         serviceRecorderHolder.put(serviceRecorder);
-    }
-
-    public static void init() {
-        serviceRecorderHolder = new Pool<>();
     }
 }

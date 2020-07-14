@@ -24,11 +24,12 @@ import java.util.concurrent.*;
  * @author KCODE
  * Created on 2020-07-04
  */
-public class KcodeAlertAnalysisImpl implements KcodeAlertAnalysis {
-    private AlertAnalyser alertAnalyser;
-    private Monitor monitor;
+public class KcodeAlertAnalysisImpl extends Configuration implements KcodeAlertAnalysis {
+    private AlertAnalyser alertAnalyser = new DefaultAnalyserImpl();
+    private Monitor monitor = new DefaultMonitorImpl();
     private Path path;
-    private ExecutorService executor;
+    private BlockingQueue<Runnable> blockingQueue;
+    private Semaphore semaphore;
 
     @Override
     public Collection<String> alarmMonitor(String filePath, Collection<String> alertRules) {
@@ -39,9 +40,8 @@ public class KcodeAlertAnalysisImpl implements KcodeAlertAnalysis {
         catch (IOException e){
             throw new RuntimeException(e);
         }
-        executor.shutdown();
         try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+            semaphore.acquire();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -49,14 +49,31 @@ public class KcodeAlertAnalysisImpl implements KcodeAlertAnalysis {
     }
 
     private void init(Collection<String> alertRules){
-        ReadBufferPool.init();
-        ServiceRecorderPool.init();
         StringPool.init();
-        executor = Executors.newSingleThreadExecutor();
-        alertAnalyser = new DefaultAnalyserImpl();
+        semaphore = new Semaphore(0);
+        blockingQueue = new SynchronousQueue<>(true);
         alertAnalyser.init(alertRules);
-        monitor = new DefaultMonitorImpl(executor);
+        monitor.init(blockingQueue);
         path = new DefaultPathImpl();
+        new Thread(){
+            @Override
+            public void run() {
+                Runnable job;
+                while (true){
+                    try{
+                        job = blockingQueue.take();
+                    }
+                    catch (InterruptedException e){
+                        throw new RuntimeException(e);
+                    }
+                    if (job == POX){
+                        semaphore.release();
+                        return;
+                    }
+                    job.run();
+                }
+            }
+        }.start();
     }
 
     @Override

@@ -9,7 +9,7 @@ import java.io.InputStream;
 public class ReadBufferPool extends Configuration {
     private ReadBufferPool(){}
 
-    private static Pool<ReadBuffer> readBufferHolder;
+    private static Pool<ReadBuffer> readBufferHolder = new Pool<>();
 
     public synchronized static ReadBuffer get(InputStream inputStream) {
         if (readBufferHolder.isEmpty()){
@@ -22,9 +22,5 @@ public class ReadBufferPool extends Configuration {
 
     public synchronized static void put(ReadBuffer readBuffer){
         readBufferHolder.put(readBuffer);
-    }
-
-    public static void init(){
-        readBufferHolder = new Pool<>();
     }
 }

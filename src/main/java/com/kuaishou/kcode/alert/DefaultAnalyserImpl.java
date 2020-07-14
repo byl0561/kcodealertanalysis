@@ -3,20 +3,18 @@ package com.kuaishou.kcode.alert;
 import com.kuaishou.kcode.alert.domain.RuleTypeEnum;
 import com.kuaishou.kcode.alert.domain.RangeEnum;
 import com.kuaishou.kcode.common.ServicePairWithIP;
+import com.kuaishou.kcode.common.ServiceRecorder;
 import com.kuaishou.kcode.common.StatisticalIndicators;
 import com.kuaishou.kcode.utils.*;
 
 import java.util.*;
 
 public class DefaultAnalyserImpl implements AlertAnalyser {
-    private int lastTime;
-    private Map<ServicePairWithIP, Counter> records = new HashMap<>();
     private Collection<String> alertList;
     private Rule rules = null;
 
     @Override
     public void init(Collection<String> alertRules) {
-        lastTime = -2;
         alertRules.forEach(rule -> {
             rules = new Rule(rules, rule);
         });
@@ -26,13 +24,9 @@ public class DefaultAnalyserImpl implements AlertAnalyser {
     // WARN: 要求请求到来严格有序,单线程处理
     @Override
     public void analyser(int nowTime, ServicePairWithIP servicePairWithIP, StatisticalIndicators indicators) {
-        if (lastTime + 1 != nowTime){
-            records.clear();
-        }
         if (Objects.nonNull(rules)){
             rules.filter(servicePairWithIP, alertList, indicators, nowTime);
         }
-        lastTime = nowTime;
     }
 
     @Override
@@ -64,6 +58,7 @@ public class DefaultAnalyserImpl implements AlertAnalyser {
         private byte timeLimit = 0;
         private RangeEnum range;
         private short valueLimit = 0;
+        private Map<ServicePairWithIP, Counter> records = new HashMap<>();
 
         private void generateRule(String rule){
             int idx = 0;
@@ -83,7 +78,7 @@ public class DefaultAnalyserImpl implements AlertAnalyser {
             range = RangeEnum.valueOfSymbol(rule.charAt(idx++));
             idx++;
             if (ruleType == RuleTypeEnum.SUCCESS_RATE){
-                valueLimit = (short) (100 * Float.parseFloat(rule.substring(idx, rule.length()-1)));
+                valueLimit = (short) (100.0 * Float.parseFloat(rule.substring(idx, rule.length()-1)));
             }
             else if (ruleType == RuleTypeEnum.P99){
                 while (rule.charAt(idx) >= '0' && rule.charAt(idx) <= '9'){
@@ -94,18 +89,18 @@ public class DefaultAnalyserImpl implements AlertAnalyser {
 
         public void filter(ServicePairWithIP servicePairWithIP, Collection<String> collection, StatisticalIndicators indicators, int time){
             if ((fromService.equals("ALL") || fromService.equals(servicePairWithIP.getFromService())) &&
-                    (toService.equals("ALL")) || toService.equals(servicePairWithIP.getToService())){
+                    (toService.equals("ALL") || toService.equals(servicePairWithIP.getToService()))){
                 if (match(indicators)){
                     Counter counter = records.get(servicePairWithIP);
                     if (Objects.isNull(counter)){
-                        counter = new Counter((byte) 0, time - 1);
+                        counter = new Counter((byte) -1, -1);
                         records.put(ServicePairFactory.clone(servicePairWithIP), counter);
                     }
                     if (counter.lastTmp == time - 1){
                         counter.count = (byte) Math.min(timeLimit, counter.count + 1);
                     }
                     else{
-                        counter.count = 1;
+                        counter.count = (byte) Math.min(timeLimit, 1);
                     }
                     if (counter.count == timeLimit){
                         alert(collection, servicePairWithIP, time, indicators);

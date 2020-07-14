@@ -9,16 +9,13 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DefaultMonitorImpl extends AbstractMonitorImpl {
-    public DefaultMonitorImpl(Executor executor){
-        this.handleRecorderExecutor = executor;
-    }
-    private BlockingQueue<ReadBuffer> readBufferBlockingQueue = new SynchronousQueue<>();
-    private Map<Integer, Map<ServicePairWithoutIP, ServiceRecorder>> tmp = new ConcurrentHashMap<>();
-    private int[] bufferHandlerRecorder = new int[MAX_BUFFER_HANDLER_COUNT];
-    private AtomicInteger threadCounter = new AtomicInteger(0);
+    private BlockingQueue<ReadBuffer> readBufferBlockingQueue;
+    private Map<Integer, Map<ServicePairWithoutIP, ServiceRecorder>> tmp;
+    private int[] bufferHandlerRecorder;
+    private AtomicInteger threadCounter;
 
-    private Semaphore semaphore = new Semaphore(0);
-    private Executor handleRecorderExecutor;
+    private Semaphore semaphore;
+    private BlockingQueue<Runnable> blockingQueue;
 
     @Override
     protected void dealReadBuffer(ReadBuffer buffer, AlertHandler alertHandler, PathHandler pathHandler) {
@@ -59,16 +56,44 @@ public class DefaultMonitorImpl extends AbstractMonitorImpl {
         // 按序提交
         while (!tmp.isEmpty()){
             Map<ServicePairWithoutIP, ServiceRecorder> job = tmp.remove(baseTimeStamp);
-            if (Objects.nonNull(job)){
-                job.forEach((servicePair, recorder) -> {
-                    recorder.collectResult(alertHandler, pathHandler, baseTimeStamp, servicePair.getFromService(), servicePair.getToService());
-                });
-            }
+            submit(job, alertHandler, pathHandler);
             baseTimeStamp++;
         }
 
+        try {
+            blockingQueue.put(POX);
+        }
+        catch (InterruptedException e){
+            throw new RuntimeException(e);
+        }
         // todo：资源释放
         tmp = null;
+    }
+
+    private void submit(Map<ServicePairWithoutIP, ServiceRecorder> job, AlertHandler alertHandler, PathHandler pathHandler){
+        if (Objects.nonNull(job)){
+            job.forEach((servicePair, recorder) -> {
+                recorder.calculate();
+                try {
+                    blockingQueue.put(() -> {
+                        recorder.collectResult(alertHandler, pathHandler, baseTimeStamp, servicePair.getFromService(), servicePair.getToService());
+                    });
+                }
+                catch (InterruptedException e){
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void init(BlockingQueue<Runnable> bq) {
+        this.blockingQueue = bq;
+        tmp = new ConcurrentHashMap<>();
+        readBufferBlockingQueue = new SynchronousQueue<>();
+        bufferHandlerRecorder = new int[MAX_BUFFER_HANDLER_COUNT];
+        threadCounter = new AtomicInteger(0);
+        semaphore = new Semaphore(0);
     }
 
     private class Worker extends Thread {
@@ -126,7 +151,7 @@ public class DefaultMonitorImpl extends AbstractMonitorImpl {
 
         private void dealRecord(Record record){
             int nowTime = record.getTimeStamp();
-            int lt = nowTime - 2;
+            int lt = nowTime - MAX_TIME_GAP;
             if (lt > lastTime){
                 lunchJob(lt);
                 lastTime = lt;
@@ -142,7 +167,7 @@ public class DefaultMonitorImpl extends AbstractMonitorImpl {
 
         private void lunchJob(int nowTime){
             int min = Integer.MAX_VALUE;
-            Queue<FutureTask<ServiceRecorder>> futureQueue = new LinkedList<>();
+
             synchronized (bufferHandlerRecorder){
                 bufferHandlerRecorder[name] = nowTime;
                 for (int i : bufferHandlerRecorder){
@@ -150,23 +175,9 @@ public class DefaultMonitorImpl extends AbstractMonitorImpl {
                 }
                 for (; baseTimeStamp < min; baseTimeStamp++){
                     Map<ServicePairWithoutIP, ServiceRecorder> job = tmp.remove(baseTimeStamp);
-                    if (Objects.nonNull(job)){
-                        job.forEach((servicePair, recorder) -> {
-                            FutureTask<ServiceRecorder> future = new FutureTask<>(() -> {
-                                recorder.caculate();
-                                return recorder;
-                            });
-                            handleRecorderExecutor.execute(() -> {
-                                recorder.collectResult(alertHandler, pathHandler, baseTimeStamp, servicePair.getFromService(), servicePair.getToService());
-                            });
-                            futureQueue.offer(future);
-                        });
-                    }
+                    submit(job, alertHandler, pathHandler);
                 }
             }
-            futureQueue.forEach(future -> {
-                future.run();
-            });
         }
 
         private void addRecordToRecorder(Record record, Map<ServicePairWithoutIP, ServiceRecorder> servicePair2recorder){

@@ -3,13 +3,12 @@ package com.kuaishou.kcode.check.demo;
 import static com.kuaishou.kcode.check.demo.Utils.createQ1CheckResult;
 import static com.kuaishou.kcode.check.demo.Utils.createQ2Result;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.kuaishou.kcode.KcodeAlertAnalysis;
@@ -24,13 +23,13 @@ public class KcodeAlertAnalysisTest {
     public static void main(String[] args) throws Exception {
         // 第一套数据集
         //kcodeAlertForStudent-1.data，原始监控数据
-        String sourceFilePath1 = "";
+        String sourceFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\kcodeAlertForStudent-test.data";
         // ruleForStudent-1，报警规则
-        String ruleFilePath1 = "";
+        String ruleFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\ruleForStudent-test.txt";
         // Q1Result-1.txt，第一问结果
-        String q1ResultFilePath1 = "";
+        String q1ResultFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\Q1Result-test.data";
         // Q2Result-1.txt，第二问输出和结果
-        String q2ResultFilePath1 = "";
+        String q2ResultFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\Q2Answer-test.data";
 
         // 第二套数据集
         //kcodeAlertForStudent-2.data，原始监控数据
@@ -43,7 +42,7 @@ public class KcodeAlertAnalysisTest {
         String q2ResultFilePath2 = "";
 
         testQuestion12(sourceFilePath1, ruleFilePath1, q1ResultFilePath1, q2ResultFilePath1);
-        testQuestion12(sourceFilePath2, ruleFilePath2, q1ResultFilePath2, q2ResultFilePath2);
+        // testQuestion12(sourceFilePath2, ruleFilePath2, q1ResultFilePath2, q2ResultFilePath2);
 
     }
 
@@ -56,6 +55,26 @@ public class KcodeAlertAnalysisTest {
         Collection<String> alertResult = instance.alarmMonitor(sourceFilePath, alertRules);
         long finish = System.nanoTime();
         if (Objects.isNull(alertResult) || alertResult.size() != q1CheckResult.size()) {
+            List<String> li = new ArrayList<>();
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(q1ResultFilePath)))){
+                while (true){
+                    String str = reader.readLine();
+                    if (str == null){
+                        break;
+                    }
+                    li.add(str);
+                }
+            }
+            li.sort(Comparator.naturalOrder());
+            Set<String> ans = new HashSet<>();
+            ans.addAll(alertResult);
+            for (String tar : li){
+                if (!ans.contains(tar)){
+                    System.out.println(tar);
+                }
+            }
+
+
             System.out.println("Q1 Error Size:" + q1CheckResult + "," + alertResult.size());
             return;
         }

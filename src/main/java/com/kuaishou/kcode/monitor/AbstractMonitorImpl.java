@@ -41,7 +41,7 @@ public abstract class AbstractMonitorImpl extends Configuration implements Monit
 
     private void setBaseTimeStamp(ReadBuffer buffer){
         Record firstRecord = buffer.next();
-        baseTimeStamp = firstRecord.getTimeStamp() - 2;
+        baseTimeStamp = firstRecord.getTimeStamp() - MAX_TIME_GAP;
         buffer.reset();
     }
 

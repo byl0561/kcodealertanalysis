@@ -12,8 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DefaultPathImpl implements Path {
     private Map<Integer, Map<ServicePairWithoutIP, StatisticalIndicators>> points = new ConcurrentHashMap<>();
     private Map<ServicePairWithoutIP, ServicePairWithoutIP> servicePairPool = new ConcurrentHashMap<>();
-    private Graph graphP = new Graph();
-    private Graph graphN = new Graph();
+    private Graph graphP = new Graph(false);
+    private Graph graphN = new Graph(true);
+    private Map<ServicePairWithoutIP, Collection<List<String>>> pathCache = new HashMap<>();
 
     @Override
     public void addPoint(int time, ServicePairWithoutIP servicePair, StatisticalIndicators indicators) {
@@ -41,17 +42,21 @@ public class DefaultPathImpl implements Path {
             return Collections.emptyList();
         }
         Collection<String> collection = new ArrayList<>();
-        Collection<List<String>> path = new ArrayList<>();
-        Collection<List<String>> fromN = graphN.getLongestPaths(servicePair.getFromService());
-        Collection<List<String>> toP = graphP.getLongestPaths(servicePair.getToService());
-        fromN.forEach(fromPath -> {
-            Collections.reverse(fromPath);
-            toP.forEach(toPath -> {
-                List<String> fp = new ArrayList<>(fromPath);
-                fp.addAll(toPath);
-                path.add(fp);
+        Collection<List<String>> path = pathCache.get(servicePair);
+        if (Objects.isNull(path)){
+            Collection<List<String>> p = new ArrayList<>();
+            Collection<List<String>> fromN = graphN.getLongestPaths(servicePair.getFromService());
+            Collection<List<String>> toP = graphP.getLongestPaths(servicePair.getToService());
+            fromN.forEach(fromPath -> {
+                toP.forEach(toPath -> {
+                    List<String> fp = new ArrayList<>(fromPath);
+                    fp.addAll(toPath);
+                    p.add(fp);
+                });
             });
-        });
+            path = p;
+            pathCache.put(servicePair, path);
+        }
         StringBuilder name = new StringBuilder();
         StringBuilder value = new StringBuilder();
         path.forEach(p -> {
@@ -66,8 +71,12 @@ public class DefaultPathImpl implements Path {
                         value.append(Objects.isNull(indicator) ? -1 : indicator.getP99()).append("ms,");
                     }
                     else if (ruleType == RuleTypeEnum.SUCCESS_RATE){
-                        short v = indicator.getSuccessRate();
-                        MathConverter.addPercentageInStringBuilder(v, value);
+                        if (Objects.isNull(indicator)){
+                            value.append("-1%");
+                        }
+                        else {
+                            MathConverter.addPercentageInStringBuilder(indicator.getSuccessRate(), value);
+                        }
                         value.append(',');
                     }
                 }
@@ -82,9 +91,13 @@ public class DefaultPathImpl implements Path {
     }
 
     private static class Graph{
+        public Graph(boolean isReverse){
+            this.isReverse = isReverse;
+        }
 
         private Map<String, Point> pointMap = new ConcurrentHashMap<>();
         private Map<String, Collection<List<String>>> pathCache = new ConcurrentHashMap<>();
+        private boolean isReverse;
 
         public void addEdge (String from, String to){
             Point fromPoint = getPoint(from);
@@ -108,6 +121,9 @@ public class DefaultPathImpl implements Path {
             }
             paths = new ArrayList<>();
             appendLongestPath(pointMap.get(name), paths, new ArrayList<>());
+            if (isReverse){
+                paths.forEach(Collections::reverse);
+            }
             pathCache.putIfAbsent(name, paths);
             return paths;
         }
@@ -169,7 +185,7 @@ public class DefaultPathImpl implements Path {
 
             @Override
             public int hashCode() {
-                return Objects.hash(name);
+                return name.hashCode();
             }
         }
     }
