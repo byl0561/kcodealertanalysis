@@ -11,10 +11,11 @@ import java.util.*;
 
 public class DefaultAnalyserImpl implements AlertAnalyser {
     private Collection<String> alertList;
-    private Rule rules = null;
+    private Rule rules;
 
     @Override
     public void init(Collection<String> alertRules) {
+        rules = null;
         alertRules.forEach(rule -> {
             rules = new Rule(rules, rule);
         });

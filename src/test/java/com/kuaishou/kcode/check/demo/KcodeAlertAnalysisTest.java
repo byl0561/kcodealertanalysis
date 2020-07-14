@@ -23,26 +23,37 @@ public class KcodeAlertAnalysisTest {
     public static void main(String[] args) throws Exception {
         // 第一套数据集
         //kcodeAlertForStudent-1.data，原始监控数据
-        String sourceFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\kcodeAlertForStudent-test.data";
+        String sourceFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data1\\data1\\kcodeAlertForStudent-1.data";
         // ruleForStudent-1，报警规则
-        String ruleFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\ruleForStudent-test.txt";
+        String ruleFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data1\\data1\\ruleForStudent-1.txt";
         // Q1Result-1.txt，第一问结果
-        String q1ResultFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\Q1Result-test.data";
+        String q1ResultFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data1\\data1\\Q1Result-1.txt";
         // Q2Result-1.txt，第二问输出和结果
-        String q2ResultFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\Q2Answer-test.data";
+        String q2ResultFilePath1 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data1\\data1\\Q2Result-1.txt";
+
+        // 第一套数据集
+        //kcodeAlertForStudent-1.data，原始监控数据
+        String sourceFilePathtest = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\kcodeAlertForStudent-test.data";
+        // ruleForStudent-1，报警规则
+        String ruleFilePathtest = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\ruleForStudent-test.txt";
+        // Q1Result-1.txt，第一问结果
+        String q1ResultFilePathtest = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\Q1Result-test.data";
+        // Q2Result-1.txt，第二问输出和结果
+        String q2ResultFilePathtest = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data-test\\test\\Q2Answer-test.data";
 
         // 第二套数据集
         //kcodeAlertForStudent-2.data，原始监控数据
-        String sourceFilePath2 = "";
+        String sourceFilePath2 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data2\\data2\\kcodeAlertForStudent-2.data";
         // ruleForStudent-2，报警规则
-        String ruleFilePath2 = "";
+        String ruleFilePath2 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data2\\data2\\ruleForStudent-2.txt";
         // Q1Result-2.txt，第一问结果
-        String q1ResultFilePath2 = "";
+        String q1ResultFilePath2 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data2\\data2\\Q1Result-2.txt";
         // Q2Result-2.txt，第二问输出和结果
-        String q2ResultFilePath2 = "";
+        String q2ResultFilePath2 = "C:\\Users\\byl\\Desktop\\KcodeAlertAnalysis-data2\\data2\\Q2Result-2.txt";
 
         testQuestion12(sourceFilePath1, ruleFilePath1, q1ResultFilePath1, q2ResultFilePath1);
-        // testQuestion12(sourceFilePath2, ruleFilePath2, q1ResultFilePath2, q2ResultFilePath2);
+        testQuestion12(sourceFilePathtest, ruleFilePathtest, q1ResultFilePathtest, q2ResultFilePathtest);
+        testQuestion12(sourceFilePath2, ruleFilePath2, q1ResultFilePath2, q2ResultFilePath2);
 
     }
 
