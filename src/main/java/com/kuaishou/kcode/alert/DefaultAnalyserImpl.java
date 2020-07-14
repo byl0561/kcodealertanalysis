@@ -79,7 +79,7 @@ public class DefaultAnalyserImpl implements AlertAnalyser {
             range = RangeEnum.valueOfSymbol(rule.charAt(idx++));
             idx++;
             if (ruleType == RuleTypeEnum.SUCCESS_RATE){
-                valueLimit = (short) (100.0 * Float.parseFloat(rule.substring(idx, rule.length()-1)));
+                valueLimit = (short) Math.round(100.0 * Float.parseFloat(rule.substring(idx, rule.length()-1)));
             }
             else if (ruleType == RuleTypeEnum.P99){
                 while (rule.charAt(idx) >= '0' && rule.charAt(idx) <= '9'){
