@@ -97,14 +97,17 @@ public class StringPool {
         else if (b == '_'){
             idx = 62;
         }
+        else if (b == '-'){
+            idx = 63;
+        }
         else {
-            throw new RuntimeException("byte 不在 [0-9,a-z,A-Z,_] 范围内, byte: " + (char) b);
+            throw new RuntimeException("byte 不在 [0-9,a-z,A-Z,_,-] 范围内, byte: " + (char) b);
         }
         return idx;
     }
 
     private static class Node{
-        private static final int CAPACITY = 10 + 26 + 26 + 1;
+        private static final int CAPACITY = 10 + 26 + 26 + 2;
 
         private String value;
         private Node[] nextNode = new Node[CAPACITY];
