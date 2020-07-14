@@ -66,26 +66,6 @@ public class KcodeAlertAnalysisTest {
         Collection<String> alertResult = instance.alarmMonitor(sourceFilePath, alertRules);
         long finish = System.nanoTime();
         if (Objects.isNull(alertResult) || alertResult.size() != q1CheckResult.size()) {
-            List<String> li = new ArrayList<>();
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(q1ResultFilePath)))){
-                while (true){
-                    String str = reader.readLine();
-                    if (str == null){
-                        break;
-                    }
-                    li.add(str);
-                }
-            }
-            li.sort(Comparator.naturalOrder());
-            Set<String> ans = new HashSet<>();
-            ans.addAll(alertResult);
-            for (String tar : li){
-                if (!ans.contains(tar)){
-                    System.out.println(tar);
-                }
-            }
-
-
             System.out.println("Q1 Error Size:" + q1CheckResult + "," + alertResult.size());
             return;
         }
