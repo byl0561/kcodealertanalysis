@@ -73,15 +73,14 @@ public class DefaultMonitorImpl extends AbstractMonitorImpl {
         if (Objects.nonNull(job)){
             job.forEach((servicePair, recorder) -> {
                 recorder.calculate();
-                recorder.collectResult(alertHandler, pathHandler, baseTimeStamp, servicePair.getFromService(), servicePair.getToService());
-                /*try {
+                try {
                     blockingQueue.put(() -> {
                         recorder.collectResult(alertHandler, pathHandler, baseTimeStamp, servicePair.getFromService(), servicePair.getToService());
                     });
                 }
                 catch (InterruptedException e){
                     throw new RuntimeException(e);
-                }*/
+                }
             });
         }
     }
