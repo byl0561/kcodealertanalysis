@@ -55,6 +55,10 @@ public class KcodeAlertAnalysisTest {
         testQuestion12(sourceFilePathtest, ruleFilePathtest, q1ResultFilePathtest, q2ResultFilePathtest);
         testQuestion12(sourceFilePath2, ruleFilePath2, q1ResultFilePath2, q2ResultFilePath2);
 
+        testQuestion12(sourceFilePath1, ruleFilePath1, q1ResultFilePath1, q2ResultFilePath1);
+        testQuestion12(sourceFilePathtest, ruleFilePathtest, q1ResultFilePathtest, q2ResultFilePathtest);
+        testQuestion12(sourceFilePath2, ruleFilePath2, q1ResultFilePath2, q2ResultFilePath2);
+
     }
 
     public static void testQuestion12(String sourceFilePath, String ruleFilePath, String q1ResultFilePath, String q2ResultFilePath) throws Exception {
