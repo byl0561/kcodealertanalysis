@@ -66,7 +66,6 @@ public class DefaultMonitorImpl extends AbstractMonitorImpl {
         catch (InterruptedException e){
             throw new RuntimeException(e);
         }
-        // todo：资源释放
         tmp = null;
     }
 
