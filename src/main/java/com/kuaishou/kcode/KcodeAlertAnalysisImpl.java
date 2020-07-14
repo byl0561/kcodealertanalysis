@@ -49,8 +49,6 @@ public class KcodeAlertAnalysisImpl extends Configuration implements KcodeAlertA
     }
 
     private void init(Collection<String> alertRules){
-        alertAnalyser = new DefaultAnalyserImpl();
-        monitor = new DefaultMonitorImpl();
         StringPool.init();
         ReadBufferPool.init();
         semaphore = new Semaphore(0);
