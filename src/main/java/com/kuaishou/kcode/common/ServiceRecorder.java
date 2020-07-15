@@ -36,7 +36,7 @@ public class ServiceRecorder extends Configuration {
             servicePairWithIP.init(fromService, toService, records.fromIP, records.toIP);
             alertHandler.handle(time, servicePairWithIP, new StatisticalIndicators(records.p99, records.successRate));
         });
-        pathHandler.handle(time, new ServicePairWithoutIP(servicePairWithIP.getFromService(), servicePairWithIP.getToService()), new StatisticalIndicators(allRecords.p99, allRecords.successRate));
+        pathHandler.handle(time, new ServicePairWithoutIP(fromService, toService), new StatisticalIndicators(allRecords.p99, allRecords.successRate));
         ServiceRecorderPool.put(this);
     }
 
@@ -101,7 +101,7 @@ public class ServiceRecorder extends Configuration {
         }
 
         void calculate(){
-            successRate = (short) ((long) successTimes * 10000 / totalTimes);
+            successRate = (short) (successTimes * 10000L / totalTimes);
             p99 = MathUtil.get99th(delays, totalTimes);
         }
     }

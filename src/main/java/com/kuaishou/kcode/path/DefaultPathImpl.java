@@ -35,23 +35,38 @@ public class DefaultPathImpl implements Path {
         name2indicators.put(cachedPair, indicators);
     }
 
+    public static void main(String... args){
+        StatisticalIndicators indicator = null;
+        StringBuilder value = new StringBuilder();
+        value.append(Objects.isNull(indicator) ? -1 : indicator.getP99()).append("ms,");
+        if (Objects.isNull(indicator)){
+            value.append("-1%");
+        }
+        else {
+            MathConverter.addPercentageInStringBuilder(indicator.getSuccessRate(), value);
+        }
+        value.append(',');
+        System.out.println(value);
+    }
+
     @Override
     public Collection<String> getPath(ServicePairWithoutIP servicePair, int time, RuleTypeEnum ruleType) {
+        if (!servicePairPool.containsKey(servicePair)){
+            return Collections.emptyList();
+        }
         Map<ServicePairWithoutIP, StatisticalIndicators> indicators = points.getOrDefault(time, Collections.emptyMap());
         Collection<String> collection = new ArrayList<>();
-        Collection<List<String>> path = pathCache.get(servicePair);
-        if (Objects.isNull(path)){
-            Collection<List<String>> p = new ArrayList<>();
+        Collection<List<String>> path = pathCache.getOrDefault(servicePair, new ArrayList<>());
+        if (path.isEmpty()){
             Collection<List<String>> fromN = graphN.getLongestPaths(servicePair.getFromService());
             Collection<List<String>> toP = graphP.getLongestPaths(servicePair.getToService());
             fromN.forEach(fromPath -> {
                 toP.forEach(toPath -> {
-                    List<String> fp = new ArrayList<>(fromPath);
+                    List<String> fp = new LinkedList<>(fromPath);
                     fp.addAll(toPath);
-                    p.add(fp);
+                    path.add(fp);
                 });
             });
-            path = p;
             pathCache.put(servicePair, path);
         }
         StringBuilder name = new StringBuilder();
@@ -93,7 +108,7 @@ public class DefaultPathImpl implements Path {
         }
 
         private Map<String, Point> pointMap = new ConcurrentHashMap<>();
-        private Map<String, Collection<List<String>>> pathCache = new ConcurrentHashMap<>();
+        private Map<Point, Collection<List<String>>> pathCache = new ConcurrentHashMap<>();
         private boolean isReverse;
 
         public void addEdge (String from, String to){
@@ -112,35 +127,36 @@ public class DefaultPathImpl implements Path {
         }
 
         public Collection<List<String>> getLongestPaths(String name){
-            Collection<List<String>> paths = pathCache.get(name);
-            if (Objects.nonNull(paths)){
-                return paths;
-            }
-            paths = new ArrayList<>();
-            appendLongestPath(pointMap.get(name), paths, new ArrayList<>());
-            if (isReverse){
-                paths.forEach(Collections::reverse);
-            }
-            pathCache.putIfAbsent(name, paths);
-            return paths;
+            return appendLongestPath(pointMap.get(name));
         }
 
-        private void appendLongestPath(Point nowPoint, Collection<List<String>> collection, List<String> nowPaths){
-            nowPaths.add(nowPoint.name);
+        private Collection<List<String>> appendLongestPath(Point nowPoint){
+            Collection<List<String>> paths = pathCache.getOrDefault(nowPoint, new ArrayList<>());
+            if (!paths.isEmpty()){
+                return paths;
+            }
             if (nowPoint.nextPoints.isEmpty()){
-                collection.add(nowPaths);
+                paths.add(Collections.singletonList(nowPoint.name));
             }
-            else if (nowPoint.nextPoints.size() == 1){
+            else{
                 nowPoint.nextPoints.forEach(point -> {
-                    appendLongestPath(point, collection, nowPaths);
+                    Collection<List<String>> nextPaths = appendLongestPath(point);
+                    nextPaths.forEach(nextPath -> {
+                        List<String> nl = new LinkedList<>();
+                        if (isReverse){
+                            nl.addAll(nextPath);
+                            nl.add(nowPoint.name);
+                        }
+                        else {
+                            nl.add(nowPoint.name);
+                            nl.addAll(nextPath);
+                        }
+                        paths.add(nl);
+                    });
                 });
             }
-            else {
-                nowPoint.nextPoints.forEach(point -> {
-                    List<String> np = new ArrayList<>(nowPaths);
-                    appendLongestPath(point, collection, np);
-                });
-            }
+            pathCache.put(nowPoint, paths);
+            return paths;
         }
 
 
