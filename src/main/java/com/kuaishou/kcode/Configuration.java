@@ -9,7 +9,7 @@ public class Configuration {
     protected static final int MAX_TIME_GAP = 2;
 
     // 处理buffer最大线程数量
-    protected static final int MAX_BUFFER_HANDLER_COUNT = 2;
+    protected static final int MAX_BUFFER_HANDLER_COUNT = 1;
 
     // Q1终止信号
     protected static final Runnable POX = new Runnable() {
