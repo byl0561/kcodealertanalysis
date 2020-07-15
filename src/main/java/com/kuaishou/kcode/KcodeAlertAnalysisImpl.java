@@ -8,6 +8,7 @@ import com.kuaishou.kcode.monitor.DefaultMonitorImpl;
 import com.kuaishou.kcode.monitor.Monitor;
 import com.kuaishou.kcode.path.DefaultPathImpl;
 import com.kuaishou.kcode.path.Path;
+import com.kuaishou.kcode.utils.MathUtil;
 import com.kuaishou.kcode.utils.ReadBufferPool;
 import com.kuaishou.kcode.utils.StringPool;
 import com.kuaishou.kcode.utils.TimeConverter;
@@ -25,8 +26,8 @@ import java.util.concurrent.*;
  * Created on 2020-07-04
  */
 public class KcodeAlertAnalysisImpl extends Configuration implements KcodeAlertAnalysis {
-    private AlertAnalyser alertAnalyser = new DefaultAnalyserImpl();
-    private Monitor monitor = new DefaultMonitorImpl();
+    private AlertAnalyser alertAnalyser;
+    private Monitor monitor;
     private Path path;
     private BlockingQueue<Runnable> blockingQueue;
     private Semaphore semaphore;
@@ -57,16 +58,21 @@ public class KcodeAlertAnalysisImpl extends Configuration implements KcodeAlertA
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return alertAnalyser.getAlert();
+        Collection<String> result = alertAnalyser.getAlert();
+        alertAnalyser = null;
+        monitor = null;
+        return result;
     }
 
     private void init(Collection<String> alertRules){
         StringPool.init();
         ReadBufferPool.init();
+        TimeConverter.init();
+        MathUtil.init();
         semaphore = new Semaphore(0);
-        blockingQueue = new SynchronousQueue<>(true);
-        alertAnalyser.init(alertRules);
-        monitor.init(blockingQueue);
+        blockingQueue = new SynchronousQueue<>();
+        alertAnalyser = new DefaultAnalyserImpl(alertRules);
+        monitor = new DefaultMonitorImpl(blockingQueue);
         path = new DefaultPathImpl();
         new Thread(){
             @Override

@@ -7,7 +7,11 @@ public class TimeConverter {
 
     private static final int[] _365M = new int[]{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     private static final int zeroPoint = calculateDays(1970, 1, 1);
-    private static final int offset  = ZonedDateTime.now().getOffset().getTotalSeconds() / 60;
+    private static int offset;
+
+    public static void init(){
+        offset  = ZonedDateTime.now().getOffset().getTotalSeconds() / 60;
+    }
 
     public static int convertStringToInt(String date){
         int[] dat = parseDate(date);

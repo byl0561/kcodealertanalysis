@@ -9,6 +9,15 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DefaultMonitorImpl extends AbstractMonitorImpl {
+    public DefaultMonitorImpl(BlockingQueue<Runnable> bq){
+        this.blockingQueue = bq;
+        tmp = new ConcurrentHashMap<>();
+        readBufferBlockingQueue = new SynchronousQueue<>();
+        bufferHandlerRecorder = new int[MAX_BUFFER_HANDLER_COUNT];
+        threadCounter = new AtomicInteger(0);
+        semaphore = new Semaphore(0);
+    }
+
     private BlockingQueue<ReadBuffer> readBufferBlockingQueue;
     private Map<Integer, Map<ServicePairWithoutIP, ServiceRecorder>> tmp;
     private int[] bufferHandlerRecorder;
@@ -66,7 +75,6 @@ public class DefaultMonitorImpl extends AbstractMonitorImpl {
         catch (InterruptedException e){
             throw new RuntimeException(e);
         }
-        tmp = null;
     }
 
     private void submit(Map<ServicePairWithoutIP, ServiceRecorder> job, AlertHandler alertHandler, PathHandler pathHandler){
@@ -83,16 +91,6 @@ public class DefaultMonitorImpl extends AbstractMonitorImpl {
                 }
             });
         }
-    }
-
-    @Override
-    public void init(BlockingQueue<Runnable> bq) {
-        this.blockingQueue = bq;
-        tmp = new ConcurrentHashMap<>();
-        readBufferBlockingQueue = new SynchronousQueue<>();
-        bufferHandlerRecorder = new int[MAX_BUFFER_HANDLER_COUNT];
-        threadCounter = new AtomicInteger(0);
-        semaphore = new Semaphore(0);
     }
 
     private class Worker extends Thread {

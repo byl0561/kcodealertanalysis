@@ -5,12 +5,17 @@ import com.kuaishou.kcode.Configuration;
 public class MathUtil extends Configuration {
     private MathUtil(){}
 
-    private static ThreadLocal<SmallHeap> queueLocal = new ThreadLocal<SmallHeap>(){
-        @Override
-        protected SmallHeap initialValue() {
-            return new SmallHeap();
-        }
-    };
+    private static ThreadLocal<SmallHeap> queueLocal;
+
+    public static void init(){
+        queueLocal = new ThreadLocal<SmallHeap>(){
+            @Override
+            protected SmallHeap initialValue() {
+                return new SmallHeap();
+            }
+        };
+    }
+
     public static short get99th(short[] nums, int length){
         SmallHeap smallHeap = queueLocal.get();
         smallHeap.clear();
@@ -30,7 +35,7 @@ public class MathUtil extends Configuration {
 
     private static class SmallHeap{
         public SmallHeap (){
-            heap = new short[RECORDS_SIZE/100];
+            heap = new short[RECORDS_SIZE];
             size = 0;
         }
 

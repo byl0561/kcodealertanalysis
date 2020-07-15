@@ -10,17 +10,16 @@ import com.kuaishou.kcode.utils.*;
 import java.util.*;
 
 public class DefaultAnalyserImpl implements AlertAnalyser {
-    private Collection<String> alertList;
-    private Rule rules;
-
-    @Override
-    public void init(Collection<String> alertRules) {
+    public DefaultAnalyserImpl(Collection<String> alertRules){
         rules = null;
         alertRules.forEach(rule -> {
             rules = new Rule(rules, rule);
         });
         alertList = new LinkedList<>();
     }
+
+    private Collection<String> alertList;
+    private Rule rules;
 
     // WARN: 要求请求到来严格有序,单线程处理
     @Override

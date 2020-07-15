@@ -4,7 +4,7 @@ public class Configuration {
     // READ_BUFFER长度
     protected static final int BYTE_BUFFER_LENGTH = 16 * 1024 * 1024;
     // 按IP聚合后的结果集初始容量(可自适应扩容)
-    protected static final int RECORDS_SIZE = 512;
+    protected static final int RECORDS_SIZE = 1024;
     // 最大乱序时间段
     protected static final int MAX_TIME_GAP = 2;
 

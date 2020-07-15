@@ -6,9 +6,6 @@ import com.kuaishou.kcode.common.StatisticalIndicators;
 import java.util.Collection;
 
 public interface AlertAnalyser {
-
-    void init(Collection<String> alertRules);
-
     void analyser(int nowTime, ServicePairWithIP servicePairWithIP, StatisticalIndicators indicators);
 
     Collection<String> getAlert();

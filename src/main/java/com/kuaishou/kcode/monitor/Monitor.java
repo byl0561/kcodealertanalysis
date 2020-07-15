@@ -8,7 +8,5 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
 
 public interface Monitor {
-    void init(BlockingQueue<Runnable> bq);
-
     void prepare(InputStream inputStream, AlertHandler alertHandler, PathHandler pathHandler);
 }
